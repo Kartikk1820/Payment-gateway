@@ -55,7 +55,8 @@ app.post('/initiateJuspayPayment', async (req, res) => {
     const amount = req.body.amount || 1;
 
     // makes return url
-    const returnUrl = `${req.protocol}://${req.hostname}:${port}/handleJuspayResponse`
+    const returnUrl = config.RETURN_URL
+    console.log("returnUrl", returnUrl)
 
     try {
         const sessionResponse = await juspay.orderSession.create({
@@ -111,6 +112,7 @@ app.post('/handleJuspayResponse', async (req, res) => {
                 break
         }
         callback_url =config.ENV === 'production' ? config.CALLBACK_PRODUCTION_URL : config.CALLBACK_LOCAL_URL
+        console.log("callback_url", callback_url)
         await fetch(callback_url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
