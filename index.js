@@ -8,9 +8,8 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 /**
  * Setup expresscheckout-node sdk
  */
-const SANDBOX_BASE_URL = "https://smartgatewayuat.hdfcbank.com"
-const PRODUCTION_BASE_URL = "https://smartgateway.hdfcbank.com"
-
+// const SANDBOX_BASE_URL = "https://smartgatewayuat.hdfcbank.com"
+// const PRODUCTION_BASE_URL = "https://smartgateway.hdfcbank.com"
 
 /**
  * Read config.json file
@@ -21,12 +20,15 @@ const publicKey = fs.readFileSync(config.PUBLIC_KEY_PATH)
 const privateKey = fs.readFileSync(config.PRIVATE_KEY_PATH)
 const paymentPageClientId = config.PAYMENT_PAGE_CLIENT_ID // used in orderSession request
 
+// Select base URL based on environment
+const baseUrl = config.ENV === 'production' ? config.PRODUCTION_BASE_URL : config.SANDBOX_BASE_URL
+
 /*
 Juspay.customLogger = Juspay.silentLogger
 */
 const juspay = new Juspay({
     merchantId: config.MERCHANT_ID,
-    baseUrl: SANDBOX_BASE_URL,
+    baseUrl: baseUrl,
     jweAuth: {
         keyId: config.KEY_UUID,
         publicKey,
@@ -38,7 +40,7 @@ const juspay = new Juspay({
  * initialize server
  */
 const app = express()
-const port = process.env.PORT || 5000
+const port = config.PORT || process.env.PORT || 5000
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
@@ -108,8 +110,8 @@ app.post('/handleJuspayResponse', async (req, res) => {
                 message = "order status " + orderStatus
                 break
         }
-
-        await fetch('http://localhost:8000/api/payments/callback/', {
+        callback_url =config.ENV === 'production' ? config.CALLBACK_PRODUCTION_URL : config.CALLBACK_LOCAL_URL
+        await fetch(callback_url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(statusResponse)
@@ -132,8 +134,8 @@ app.get('/', function(req,res) {
     return res.sendfile(path.join(__dirname, 'index.html'))
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`)
+app.listen(port,  '0.0.0.0', () => {
+    console.log(`Server is running on port 0.0.0.0:${port}`)
 })
 
 // Utitlity functions
