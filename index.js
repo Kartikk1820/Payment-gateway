@@ -120,13 +120,15 @@ app.post('/handleJuspayResponse', async (req, res) => {
         });
 
         // removes http field from response, typically you won't send entire structure as response
-        return res.send(makeJuspayResponse(statusResponse))
-    } catch(error) {
+        return res.status(200).json({
+            message: "Payment status received and is being processed.",
+            order_id: orderId
+        });
+    } catch (error) {
         if (error instanceof APIError) {
-            // handle errors comming from juspay's api,
-            return res.json(makeError(error.message))
+            return res.status(502).json({ error: error.message });
         }
-        return res.json(makeError())
+        return res.status(500).json({ error: "Internal server error" });
     }
 })
 // block:end:order-status-function
